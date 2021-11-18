@@ -3,3 +3,4 @@ $git_branch = (git branch --show-current)
 
 go install
 go build -o build\lmaa_$git_sha.exe main.go
+Write-Host "::set-output name=FileName::.\build\lmaa_$git_sha.exe"
