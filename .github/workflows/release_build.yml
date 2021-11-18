@@ -25,10 +25,7 @@ jobs:
         run: |
           .\cmd\build.ps1
           $git_sha=(git rev-parse --short HEAD)
-
-      - name: Go Publishr
-        uses: PackagrIO/action-publishr-go@v1.0.1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Leave this line unchanged
-        with:
-          upload_assets: lmaa_$git_sha.exe
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with: 
+          files: lmaa_$git_sha.exe
