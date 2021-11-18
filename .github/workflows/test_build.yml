@@ -27,5 +27,5 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v1.0.0
         with:
-          name: ${{ steps.build.outputs.FileName }}
+          name: ${{ steps.build.outputs.FileNamePartial }}
           path: ".\build"
