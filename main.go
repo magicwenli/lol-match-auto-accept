@@ -56,9 +56,11 @@ func AutoAccept() {
 				//log.Print(string(body))
 				log.Print("Auto Accepted")
 			} else if strings.Contains(string(body), GChampSelect) {
-				time.Sleep(10 * time.Minute)
+				time.Sleep(1 * time.Minute)
+				log.Print("Good for ChampSelect stage")
 			} else if strings.Contains(string(body), GInProgress) {
-				time.Sleep(2 * time.Minute)
+				time.Sleep(3 * time.Minute)
+				log.Print("It seems like game has started, let me sleep for a while")
 			}
 			//log.Print(string(body))
 			time.Sleep(1 * time.Second)

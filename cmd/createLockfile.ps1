@@ -32,7 +32,7 @@ If (-not (Check-If-Admin)){
 #     Write-Host((Get-Item $lockfile).length/1KB)
 # }
 
-function chech-if-running {
+function Chech-If-Running {
     $process = Get-Process -Name 'LeagueClientUx' -ErrorAction SilentlyContinue
     if($null -ne $process){return "True"}else{Write-Host "False"}
 }
