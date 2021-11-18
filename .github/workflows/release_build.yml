@@ -24,9 +24,9 @@ jobs:
       - name: Build
         run: |
           .\cmd\build.ps1
-          $git_sha=(git rev-parse --short HEAD)
+        id: build
       - name: Release
         uses: softprops/action-gh-release@v1
-        with: 
-          files: lmaa_$git_sha.exe
+        with:
+          files: ${{ steps.build.outputs.FileName }}
           tag_name: $git_sha
