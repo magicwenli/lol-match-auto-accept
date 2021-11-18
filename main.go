@@ -1,7 +1,7 @@
 package main
 
 import (
-	"./lcu"
+	"github.com/magicwenli/lol-match-auto-accept/lcu"
 	"log"
 	"os"
 	"os/exec"
