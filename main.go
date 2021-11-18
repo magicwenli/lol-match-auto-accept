@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/magicwenli/lol-match-auto-accept/lcu"
 	"log"
 	"os"
@@ -17,6 +18,9 @@ func checkRole() {
 	}
 	if strings.Contains(string(out), "False") {
 		log.Print("Please run this as administrator")
+		log.Println()
+		log.Print("Press the Enter Key to Quit")
+		fmt.Scanln()
 		os.Exit(1)
 	} else {
 		log.Print("Welcome")
