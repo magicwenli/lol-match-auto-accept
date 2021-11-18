@@ -2,8 +2,8 @@ name: Release Build
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches:
+      - master
 
 jobs:
   # This workflows contains a single job called "build"
@@ -23,8 +23,9 @@ jobs:
         run: |
           .\cmd\build.ps1
         id: build
-      - name: Release
-        uses: softprops/action-gh-release@v1
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v1.0.0
         with:
-          files: ${{ steps.build.outputs.FileName }}
-          tag_name: ${{ github.ref }}
+          name: ${{ steps.build.outputs.FileName }}
+          path: ".\build"
