@@ -2,7 +2,7 @@ package main
 
 import (
 	"./lcu"
-	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"strings"
@@ -16,14 +16,17 @@ func checkRole() {
 		panic(err)
 	}
 	if strings.Contains(string(out), "False") {
-		fmt.Println("Please run this as administrator")
+		log.Print("Please run this as administrator")
 		os.Exit(1)
 	} else {
-		fmt.Println("Welcome")
+		log.Print("Welcome")
 	}
 }
 
-var lcuInstance = lcu.NewLCUInstance()
+var (
+	lcuInstance = lcu.NewLCUInstance()
+	quitCh      = make(chan bool)
+)
 
 const (
 	GNone        = "None"
@@ -35,41 +38,60 @@ const (
 )
 
 func AutoAccept() {
-	body, err := lcuInstance.MakeRequest("/lol-gameflow/v1/gameflow-phase")
-	if err != nil {
-		panic(err)
-	}
-	if strings.Contains(string(body), GReadyCheck) {
-		body, err := lcuInstance.MakePost("/lol-matchmaking/v1/ready-check/accept")
-		if err != nil {
-			panic(err)
+	lcuInstance.GrabToken()
+	for {
+		select {
+		case <-quitCh:
+			return
+		default:
+			body, err := lcuInstance.MakeRequest("/lol-gameflow/v1/gameflow-phase")
+			if err != nil {
+				panic(err)
+			}
+			if strings.Contains(string(body), GReadyCheck) {
+				_, err := lcuInstance.MakePost("/lol-matchmaking/v1/ready-check/accept")
+				if err != nil {
+					panic(err)
+				}
+				//log.Print(string(body))
+				log.Print("Auto Accepted")
+			} else if strings.Contains(string(body), GChampSelect) {
+				time.Sleep(10 * time.Minute)
+			} else if strings.Contains(string(body), GInProgress) {
+				time.Sleep(2 * time.Minute)
+			}
+			//log.Print(string(body))
+			time.Sleep(1 * time.Second)
 		}
-		fmt.Println(string(body))
-		fmt.Println("Auto Accepted")
 	}
-	fmt.Println(string(body))
 }
 
 func main() {
 	checkRole()
-	lcuInstance.GrabToken()
-	for {
-		AutoAccept()
-		time.Sleep(1 * time.Second)
-	}
 
-	//notify := make(chan uint32)
-	//go lcuInstance.WatchLCU(notify)
-	//
-	//for {
-	//	t:=<-notify
-	//	switch t {
-	//	case 0:
-	//	//	if not running, start a goroutine, set global var running to True
-	//	case 2:
-	//	//	terminate the goroutine, set global var running to False
-	//	default:
-	//	//	do nothing
-	//	}
-	//}
+	notify := make(chan uint32)
+	go lcu.WatchLCU(&notify)
+	running := false
+
+	for {
+		t := <-notify
+		switch t {
+		case 0:
+			if !running {
+				go AutoAccept()
+				running = true
+				log.Print("start goroutine")
+			}
+		//	if not running, start a goroutine, set global var running to True
+		case 2:
+			if running {
+				quitCh <- true
+				running = false
+				log.Print("terminate goroutine")
+			}
+		//	terminate the goroutine, set global var running to False
+		default:
+			log.Print("hanging around")
+		}
+	}
 }

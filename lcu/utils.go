@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os/exec"
 	"strings"
@@ -98,7 +99,7 @@ func (lcu *LCU) GetCurrentSummoner() CurrentSummoner {
 	return s
 }
 
-func WatchLCU(notify chan uint32) {
+func WatchLCU(notify *chan uint32) {
 	event := make(chan uint32)
 	go func() {
 		for {
@@ -119,12 +120,15 @@ func WatchLCU(notify chan uint32) {
 	for {
 		e := <-event
 		if e == On && former == Off {
-			fmt.Println("Start")
-			notify <- Start
+			log.Print("Start")
+			*notify <- Start
 		} else if e == Off && former == On {
-			fmt.Println("Stop")
-			notify <- Stop
+			log.Print("Stop")
+			*notify <- Stop
+		} else if e == Off && former == Off {
+			log.Print("Game inactive")
 		}
 		former = e
+
 	}
 }
