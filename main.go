@@ -64,11 +64,11 @@ func AutoAccept(inTL *walk.TextLabel) {
 				//log.Print(string(body))
 				log.Print("Auto Accepted")
 			} else if strings.Contains(string(body), GChampSelect) {
-				log.Print("Good for ChampSelect, let me sleep for 1 minute")
-				time.Sleep(1 * time.Minute)
+				log.Print("Good for ChampSelect")
+				time.Sleep(1 * time.Second)
 			} else if strings.Contains(string(body), GInProgress) {
-				log.Print("It seems like game has started, let me sleep for 1 minutes")
-				time.Sleep(1 * time.Minute)
+				log.Print("It seems like game has started")
+				time.Sleep(1 * time.Second)
 			}
 			//log.Print(string(body))
 			time.Sleep(1 * time.Second)
