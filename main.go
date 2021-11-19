@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"github.com/lxn/walk"
+	. "github.com/lxn/walk/declarative"
 	"github.com/magicwenli/lol-match-auto-accept/lcu"
 	"log"
 	"os"
@@ -41,7 +43,7 @@ const (
 	GInProgress  = "InProgress"
 )
 
-func AutoAccept() {
+func AutoAccept(inTL *walk.TextLabel) {
 	lcuInstance.GrabToken()
 	for {
 		select {
@@ -52,6 +54,8 @@ func AutoAccept() {
 			if err != nil {
 				panic(err)
 			}
+			_ = inTL.SetText(string(body))
+
 			if strings.Contains(string(body), GReadyCheck) {
 				_, err := lcuInstance.MakePost("/lol-matchmaking/v1/ready-check/accept")
 				if err != nil {
@@ -60,11 +64,11 @@ func AutoAccept() {
 				//log.Print(string(body))
 				log.Print("Auto Accepted")
 			} else if strings.Contains(string(body), GChampSelect) {
+				log.Print("Good for ChampSelect, let me sleep for 1 minute")
 				time.Sleep(1 * time.Minute)
-				log.Print("Good for ChampSelect stage")
 			} else if strings.Contains(string(body), GInProgress) {
-				time.Sleep(3 * time.Minute)
-				log.Print("It seems like game has started, let me sleep for a while")
+				log.Print("It seems like game has started, let me sleep for 1 minutes")
+				time.Sleep(1 * time.Minute)
 			}
 			//log.Print(string(body))
 			time.Sleep(1 * time.Second)
@@ -72,27 +76,112 @@ func AutoAccept() {
 	}
 }
 
+var (
+	autoAccepted = false
+)
+
 func main() {
 	checkRole()
 
+	var mw *walk.MainWindow
+	var inTL *walk.TextLabel
+	var stCB *walk.CheckBox
+	var goCB *walk.CheckBox
+
+	go func() {
+		if err := (MainWindow{
+			AssignTo: &mw,
+			Title:    "LMAA",
+			MinSize:  Size{200, 150},
+			Size:     Size{250, 200},
+			Layout:   VBox{},
+			Children: []Widget{
+				HSplitter{
+					Children: []Widget{
+						GroupBox{
+							Title:  "Control",
+							Layout: Grid{Columns: 1},
+							Children: []Widget{
+								CheckBox{
+									AssignTo:       &goCB,
+									Name:           "Game On",
+									Text:           "Game Stat",
+									TextOnLeftSide: true,
+									Checked:        false,
+									Enabled:        false,
+									Accessibility: Accessibility{
+										Help: "Check if Game is Running",
+									},
+								},
+								CheckBox{
+									AssignTo:       &stCB,
+									Name:           "Game On",
+									Text:           "Auto Accept",
+									TextOnLeftSide: true,
+									Checked:        false,
+									Enabled:        false,
+									Accessibility: Accessibility{
+										Help: "Set Auto Accept",
+									},
+									OnCheckedChanged: func() {
+										if stCB.Checked() { // run
+											go AutoAccept(inTL)
+											autoAccepted = true
+										} else {
+											quitCh <- true
+											autoAccepted = false
+										}
+									},
+								},
+							},
+						},
+						GroupBox{
+							Title:  "Gameflow",
+							Layout: Grid{Columns: 1},
+							Children: []Widget{
+								TextLabel{AssignTo: &inTL},
+							},
+						},
+					},
+				},
+			},
+		}.Create()); err != nil {
+			log.Fatal(err)
+		}
+
+		lv, err := NewLogView(mw)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		log.SetOutput(lv)
+
+		icon, _ := walk.Resources.Icon("./assets/icon.ico")
+		mw.SetIcon(icon)
+
+		mw.Run()
+		os.Exit(0)
+	}()
+
 	notify := make(chan uint32)
 	go lcu.WatchLCU(&notify)
-	running := false
 
 	for {
 		t := <-notify
 		switch t {
 		case 0:
-			if !running {
-				go AutoAccept()
-				running = true
+			if !goCB.Checked() {
+				goCB.SetChecked(true)
+				stCB.SetEnabled(true)
 				log.Print("start goroutine")
 			}
-		//	if not running, start a goroutine, set global var running to True
+		//	if not running, start a goroutine, set global var gameRunning to True
 		case 2:
-			if running {
+			if goCB.Checked() {
 				quitCh <- true
-				running = false
+				goCB.SetChecked(false)
+				stCB.SetEnabled(false)
+				stCB.SetChecked(false)
 				log.Print("terminate goroutine")
 			}
 		//	terminate the goroutine, set global var running to False
