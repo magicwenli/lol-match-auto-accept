@@ -20,7 +20,7 @@ func checkRole() {
 	if err != nil {
 		log.Fatal(nil)
 	}
-	if !strings.Contains(string(out), "False") {
+	if strings.Contains(string(out), "False") {
 		_ = dialog.Message("%s", "Please run this as administrator").Title("Warn").YesNo()
 
 		os.Exit(1)
