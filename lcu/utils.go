@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os/exec"
 	"strings"
+	"syscall"
 	"time"
 )
 
@@ -42,6 +43,7 @@ func NewLCUInstance() LCU {
 func (lcu *LCU) GrabToken() {
 	cmd := exec.Command("powershell", "$cmdline = Get-WmiObject -Class Win32_Process -Filter \"name='LeagueClientUx.exe'\" | Select-Object -Expand CommandLine\nif($cmdline.length -gt 1){\nif($cmdline -match '--app-port=(\\d*)'){\n$port = $Matches[1]\n}\nif($cmdline -match 'remoting-auth-token=([\\w-]*)'){\n$passwd = $Matches[1]\n}\nreturn $port+':'+$passwd\n}")
 	//cmd := exec.Command("Get-WmiObject","-Query \"select * from win32_process where name='LeagueClientUx.exe'\" | Format-List -Property CommandLine")
+	cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		fmt.Println(err)
@@ -104,6 +106,7 @@ func WatchLCU(notify *chan uint32) {
 	go func() {
 		for {
 			cmd := exec.Command("powershell", "$process = Get-Process -Name 'LeagueClientUx' -ErrorAction SilentlyContinue\n    if($null -ne $process){return \"True\"}else{Write-Host \"False\"}")
+			cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
 			out, err := cmd.CombinedOutput()
 			if err != nil {
 				fmt.Println(err)

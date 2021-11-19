@@ -1,0 +1,21 @@
+{
+  "Icons": [
+    {
+      "ID": 1,
+      "Path": "assets/icon.ico"
+    }
+  ],
+  "Manifest": {
+    "ID": 1,
+    "Path": "lmaa.exe.manifest"
+  },
+  "VersionInfos": [
+    {
+      "ID": 1,
+      "Fixed": {
+        "FileVersion": "0.0.2.0",
+        "ProductVersion": "0.0.2.0"
+      }
+    }
+  ]
+}

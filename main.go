@@ -1,28 +1,28 @@
 package main
 
 import (
-	"fmt"
 	"github.com/lxn/walk"
 	. "github.com/lxn/walk/declarative"
 	"github.com/magicwenli/lol-match-auto-accept/lcu"
+	"github.com/sqweek/dialog"
 	"log"
 	"os"
 	"os/exec"
 	"strings"
+	"syscall"
 	"time"
 )
 
 func checkRole() {
 	cmd := exec.Command("powershell", "$currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())\n    return $currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)")
+	cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		panic(err)
+		log.Fatal(nil)
 	}
-	if strings.Contains(string(out), "False") {
-		log.Print("Please run this as administrator")
-		log.Println()
-		log.Print("Press the Enter Key to Quit")
-		fmt.Scanln()
+	if !strings.Contains(string(out), "False") {
+		_ = dialog.Message("%s", "Please run this as administrator").Title("Warn").YesNo()
+
 		os.Exit(1)
 	} else {
 		log.Print("Welcome")
@@ -76,10 +76,6 @@ func AutoAccept(inTL *walk.TextLabel) {
 	}
 }
 
-var (
-	autoAccepted = false
-)
-
 func main() {
 	checkRole()
 
@@ -93,8 +89,9 @@ func main() {
 			AssignTo: &mw,
 			Title:    "LMAA",
 			MinSize:  Size{200, 150},
-			Size:     Size{250, 200},
-			Layout:   VBox{},
+			Size:     Size{280, 200},
+
+			Layout: VBox{},
 			Children: []Widget{
 				HSplitter{
 					Children: []Widget{
@@ -126,10 +123,8 @@ func main() {
 									OnCheckedChanged: func() {
 										if stCB.Checked() { // run
 											go AutoAccept(inTL)
-											autoAccepted = true
 										} else {
 											quitCh <- true
-											autoAccepted = false
 										}
 									},
 								},
@@ -153,12 +148,10 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-
 		log.SetOutput(lv)
 
-		icon, _ := walk.Resources.Icon("./assets/icon.ico")
-		mw.SetIcon(icon)
-
+		icon, _ := walk.NewIconFromResourceId(1)
+		_ = mw.SetIcon(icon)
 		mw.Run()
 		os.Exit(0)
 	}()
