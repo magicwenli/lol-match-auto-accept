@@ -23,6 +23,13 @@ jobs:
         run: |
           .\cmd\build.ps1
         id: build
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v1.0.0
+        with:
+          name: ${{ steps.build.outputs.FileNamePartial }}
+          path: ${{ steps.build.outputs.FileName }}
+
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
